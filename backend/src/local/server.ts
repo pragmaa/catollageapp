@@ -1,14 +1,54 @@
-import http from 'http'
-const HOST: string = process.env.HOST || '127.0.0.1'
+'use strict';
+
+import express, { Application, Request, Response } from "express"
+const HOST: string = process.env.HOST || 'localhost'
 const PORT: string|number = process.env.PORT || 3000
+const app: Application = express();
 
-const server = http.createServer((req: any, res: any) => {
-    res.statusCode = 200
-    res.setHeader('Content-Type', 'text/html')
-    res.end('<h1>Hello, World!</h1>')
+/*
+
+    curl http://localhost:3000
+
+    curl -v --header "Content-Type: application/json" \                                      
+      --request POST \
+      --data '{"logo":"xyz"}' \                 
+      http://localhost:3000/tshirt/123
+
+*/
+
+
+// Body parsing Middleware
+app.use(express.json())
+app.use(express.urlencoded({ extended: true }))
+
+app.get('/', async (req: Request, res: Response): Promise<Response> => {
+    return res.status(200).send({
+        message: 'Hello World!'
+    })
 })
 
-server.listen(PORT, (): void => {
-    console.log(`Server running at port ${PORT} and host ${HOST}`)
+app.post('/tshirt/:id', (req: Request, res: Response) => {
+    const { id } = req.params
+    const { logo } = req.body
+
+    console.log('get body -> ', req.body)
+
+    if (!logo) {
+        res.status(418).send({
+            message: 'we need a logo!'
+        })
+    }
+
+    res.send({
+        tshirt: `shirt with your ${logo} and ID of ${id}`
+    })
 })
+
+try {
+    app.listen(PORT, ():void => {
+        console.log(`it's alive on http://${HOST}:${PORT}`)
+    })
+} catch (error) {
+    console.error(`Error occured: ${ error }`)
+}
 
